@@ -267,7 +267,31 @@ class MainActivity : AppCompatActivity(), LocationListener {
     private fun savePreferredFuel(p:OsmPoi){ prefs.edit().putString("preferred_fuel_name",p.name).putString("preferred_fuel_lat",p.lat.toString()).putString("preferred_fuel_lon",p.lon.toString()).apply(); Toast.makeText(this,"Preferred fuel: ${p.name}",Toast.LENGTH_SHORT).show(); logger.event("fuel_assist","preferred station saved",mapOf("name" to p.name,"osm" to "${p.osmType}/${p.osmId}")) }
 
     private fun markIssue(){val input=EditText(this).apply{hint="What happened?"};AlertDialog.Builder(this).setTitle("Field note").setView(input).setPositiveButton("Save"){_,_->val n=input.text.toString().trim();if(n.isNotBlank()){logger.userNote(n);Toast.makeText(this,"Note saved to local diagnostics",Toast.LENGTH_SHORT).show()}}.setNegativeButton("Cancel",null).show()}
-    private fun showDiagnostics(){val fuel=VehicleState.fuelPercent?.let{"${it.toInt()}%"}?:"unavailable";val range=VehicleState.remainingRangeMeters?.let{formatMiles(it.toDouble())}?:"unavailable";val msg="BSA ${BuildConfig.VERSION_NAME}\n\nGPS: ${lastLocation?.let{"±${it.accuracy.toInt()} m • ${if(it.hasBearing())"${it.bearing.toInt()}°" else "no bearing"}"}?:"no fix"}\nPOIs loaded: ${allPois.size}\nAndroid Auto: ${if(VehicleState.androidAutoConnected)"connected" else "not connected"}\nFuel API: ${VehicleState.fuelCapability}\nFuel: $fuel\nRange: $range\n\nDiagnostics stay local until you explicitly export them.";AlertDialog.Builder(this).setTitle("Diagnostics").setMessage(msg).setPositiveButton("Export"){_,_->shareDiagnostics()}.setNeutralButton("Clear logs"){_,_->logger.clear()}.setNegativeButton("Close",null).show()}
+    private fun showDiagnostics() {
+        val fuel = VehicleState.fuelPercent?.let { "${it.toInt()}%" } ?: "unavailable"
+        val range = VehicleState.remainingRangeMeters?.let { formatMiles(it.toDouble()) } ?: "unavailable"
+        val lastVehicleUpdate = VehicleState.lastUpdatedAtMillis?.let { ts ->
+            val ageSeconds = ((System.currentTimeMillis() - ts).coerceAtLeast(0L) / 1000L)
+            "${ageSeconds}s ago"
+        } ?: "never"
+        val msg = "BSA ${BuildConfig.VERSION_NAME}\n\n" +
+            "GPS: ${lastLocation?.let { "±${it.accuracy.toInt()} m • ${if (it.hasBearing()) "${it.bearing.toInt()}°" else "no bearing"}" } ?: "no fix"}\n" +
+            "POIs loaded: ${allPois.size}\n" +
+            "Android Auto: ${if (VehicleState.androidAutoConnected) "connected" else "not connected"}\n" +
+            "Fuel API: ${VehicleState.fuelCapability}\n" +
+            "EnergyLevel callback: $lastVehicleUpdate\n" +
+            "Fuel: $fuel\n" +
+            "Range: $range\n" +
+            "Low fuel: ${VehicleState.lowFuel?.toString() ?: "unavailable"}\n\n" +
+            "Diagnostics stay local until you explicitly export them."
+        AlertDialog.Builder(this)
+            .setTitle("Diagnostics")
+            .setMessage(msg)
+            .setPositiveButton("Export") { _, _ -> shareDiagnostics() }
+            .setNeutralButton("Clear logs") { _, _ -> logger.clear() }
+            .setNegativeButton("Close", null)
+            .show()
+    }
     private fun shareDiagnostics(){val zip=logger.exportZip(prefs.getBoolean("log_precise",false),prefs.getBoolean("log_vehicle_values",false));val uri=FileProvider.getUriForFile(this,"$packageName.files",zip);startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply{type="application/zip";putExtra(Intent.EXTRA_STREAM,uri);addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)},"Export BSA diagnostics"))}
     private fun showAbout(){AlertDialog.Builder(this).setTitle("About B.S. Awareness").setMessage("B.S. Awareness (BSA) is an experimental, open-source mapping and navigation client built around OpenStreetMap. It surfaces ordinary POIs such as fuel, food, shopping and services alongside mapped infrastructure such as surveillance cameras.\n\nThe app uses MapLibre for rendering, OpenFreeMap for the vector basemap, OpenStreetMap/Overpass for POIs, OSRM for basic road routing, and a Lucide-inspired/native stroke icon implementation with Lucide attribution.\n\nNavigation, side-of-travel descriptions and estimated camera coverage are advisory. Map data can be incomplete or wrong. Coverage graphics are estimates, not guarantees of observation or recognition.\n\nVersion ${BuildConfig.VERSION_NAME}").setPositiveButton("OK",null).show()}
     private fun showPrivacy(){AlertDialog.Builder(this).setTitle("Privacy").setMessage("BSA is local-first. There is no BSA account, advertising SDK, BSA analytics service, or BSA cloud telemetry in this alpha.\n\nYour location is used on-device for mapping, nearby POIs, navigation and alerts. Online services necessarily receive request data needed to answer queries: OpenFreeMap receives map-tile/style requests, Overpass receives the queried map area, Nominatim receives searches you submit, and OSRM receives route endpoints.\n\nAndroid Auto vehicle data is capability-gated. If fuel/range is unavailable, Fuel Assist stays dormant. BSA does not upload vehicle telemetry to a BSA server.\n\nDiagnostic logs remain on this device until you explicitly export/share them. Precise GPS values are excluded by default.").setPositiveButton("OK",null).show()}
