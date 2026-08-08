@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:background="#090D10">
+
+    <org.maplibre.android.maps.MapView android:id="@+id/mapView" android:layout_width="match_parent" android:layout_height="match_parent" />
+
+    <LinearLayout android:id="@+id/topBar" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingHorizontal="8dp" android:paddingBottom="6dp" android:background="#C90A0E11">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="46dp" android:orientation="horizontal" android:gravity="center_vertical">
+            <ImageView android:layout_width="36dp" android:layout_height="36dp" android:src="@drawable/bsa_logo_mark" android:contentDescription="B.S. Awareness" android:padding="3dp" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="BSA" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="17sp" android:paddingStart="3dp" android:paddingEnd="8dp" />
+            <EditText android:id="@+id/searchInput" android:layout_width="0dp" android:layout_height="40dp" android:layout_weight="1" android:singleLine="true" android:hint="Search destination or POI" android:textColor="#FFFFFF" android:textColorHint="#84919A" android:background="#D51A2025" android:paddingHorizontal="12dp" />
+            <ImageButton android:id="@+id/searchButton" style="@style/BsaMapButton" android:contentDescription="Search" />
+        </LinearLayout>
+        <TextView android:id="@+id/statusText" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BSA 0.4" android:textColor="#B7C5CD" android:textSize="11sp" android:maxLines="2" />
+    </LinearLayout>
+
+    <LinearLayout android:layout_width="52dp" android:layout_height="wrap_content" android:layout_gravity="end|center_vertical" android:layout_marginEnd="8dp" android:orientation="vertical" android:background="#B30A0E11" android:padding="3dp">
+        <ImageButton android:id="@+id/locateButton" style="@style/BsaMapButton" android:contentDescription="Locate/follow" />
+        <ImageButton android:id="@+id/filterButton" style="@style/BsaMapButton" android:contentDescription="Layers" />
+        <ImageButton android:id="@+id/gasButton" style="@style/BsaMapButton" android:contentDescription="Next gas" />
+        <ImageButton android:id="@+id/routeButton" style="@style/BsaMapButton" android:contentDescription="Route to selected" />
+        <ImageButton android:id="@+id/contributeButton" style="@style/BsaMapButton" android:contentDescription="Edit OpenStreetMap" />
+        <ImageButton android:id="@+id/settingsButton" style="@style/BsaMapButton" android:contentDescription="Settings" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/filterPanel" android:layout_width="245dp" android:layout_height="wrap_content" android:layout_gravity="end|center_vertical" android:layout_marginEnd="66dp" android:background="@drawable/panel_bg" android:orientation="vertical" android:padding="12dp" android:visibility="gone">
+        <TextView style="@style/BsaPanelTitle" android:text="LAYERS" />
+        <CheckBox android:id="@+id/surveillanceCheck" style="@style/BsaCheck" android:text="Surveillance / ALPR" />
+        <CheckBox android:id="@+id/foodCheck" style="@style/BsaCheck" android:text="Food &amp; drink" />
+        <CheckBox android:id="@+id/fuelCheck" style="@style/BsaCheck" android:text="Fuel" />
+        <CheckBox android:id="@+id/shoppingCheck" style="@style/BsaCheck" android:text="Shopping" />
+        <CheckBox android:id="@+id/servicesCheck" style="@style/BsaCheck" android:text="Services / parking" />
+        <CheckBox android:id="@+id/lodgingCheck" style="@style/BsaCheck" android:text="Lodging" />
+        <CheckBox android:id="@+id/otherCheck" style="@style/BsaCheck" android:text="Other mapped POIs" />
+        <CheckBox android:id="@+id/coverageCheck" style="@style/BsaCheck" android:text="Estimated camera coverage" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/settingsPanel" android:layout_width="270dp" android:layout_height="wrap_content" android:layout_gravity="end|center_vertical" android:layout_marginEnd="66dp" android:background="@drawable/panel_bg" android:orientation="vertical" android:padding="12dp" android:visibility="gone">
+        <TextView style="@style/BsaPanelTitle" android:text="SETTINGS" />
+        <CheckBox android:id="@+id/nightModeCheck" style="@style/BsaCheck" android:text="Dark map (default)" />
+        <CheckBox android:id="@+id/followModeCheck" style="@style/BsaCheck" android:text="Follow location" />
+        <CheckBox android:id="@+id/autoLoadCheck" style="@style/BsaCheck" android:text="Auto-load nearby POIs" />
+        <CheckBox android:id="@+id/surveillanceAlertsCheck" style="@style/BsaCheck" android:text="Surveillance proximity alerts" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="MY LOCATION MARKER" android:textColor="#91A0A8" android:textStyle="bold" android:textSize="11sp" android:layout_marginTop="8dp" />
+        <RadioGroup android:id="@+id/locationMarkerGroup" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <RadioButton android:id="@+id/locationArrowRadio" style="@style/BsaRadio" android:text="Navigation arrow" />
+            <RadioButton android:id="@+id/locationDotRadio" style="@style/BsaRadio" android:text="High-contrast dot" />
+            <RadioButton android:id="@+id/locationCarRadio" style="@style/BsaRadio" android:text="Car" />
+        </RadioGroup>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="SAVED DESTINATIONS" android:textColor="#91A0A8" android:textStyle="bold" android:textSize="11sp" android:layout_marginTop="8dp" />
+        <Button android:id="@+id/routeHomeButton" style="@style/BsaSmallButton" android:text="Route Home" />
+        <Button android:id="@+id/saveHomeButton" style="@style/BsaSmallButton" android:text="Save map center as Home" />
+        <Button android:id="@+id/routeWorkButton" style="@style/BsaSmallButton" android:text="Route Work" />
+        <Button android:id="@+id/saveWorkButton" style="@style/BsaSmallButton" android:text="Save map center as Work" />
+        <CheckBox android:id="@+id/fuelAssistCheck" style="@style/BsaCheck" android:text="Fuel Assist when vehicle data exists" />
+        <Button android:id="@+id/markIssueButton" style="@style/BsaSmallButton" android:text="Mark issue / field note" />
+        <Button android:id="@+id/diagnosticsButton" style="@style/BsaSmallButton" android:text="Diagnostics &amp; export" />
+        <Button android:id="@+id/aboutButton" style="@style/BsaSmallButton" android:text="About" />
+        <Button android:id="@+id/privacyButton" style="@style/BsaSmallButton" android:text="Privacy" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/routeCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="bottom" android:layout_margin="10dp" android:background="@drawable/panel_bg" android:orientation="vertical" android:padding="12dp" android:visibility="gone">
+        <TextView android:id="@+id/routeTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="16sp" />
+        <TextView android:id="@+id/routeSummary" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#91D6F5" android:textSize="13sp" android:layout_marginTop="2dp" />
+        <TextView android:id="@+id/routeInstruction" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:textSize="15sp" android:layout_marginTop="5dp" />
+        <Button android:id="@+id/clearRouteButton" style="@style/BsaSmallButton" android:text="Clear route" />
+    </LinearLayout>
+
+    <LinearLayout android:id="@+id/detailCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="bottom" android:layout_margin="10dp" android:background="@drawable/panel_bg" android:orientation="vertical" android:padding="12dp" android:visibility="gone">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+            <TextView android:id="@+id/detailTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="18sp" />
+            <ImageButton android:id="@+id/closeDetailButton" android:layout_width="40dp" android:layout_height="40dp" android:background="@android:color/transparent" android:contentDescription="Close" android:src="@android:drawable/ic_menu_close_clear_cancel" android:tint="#FFFFFF" />
+        </LinearLayout>
+        <TextView android:id="@+id/detailCategory" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#91D6F5" android:textSize="13sp" />
+        <TextView android:id="@+id/detailOperator" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#E8EDF0" android:textSize="13sp" android:visibility="gone" />
+        <TextView android:id="@+id/detailDistance" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="14sp" android:layout_marginTop="5dp" />
+        <TextView android:id="@+id/detailTags" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#9AA7AE" android:textSize="10sp" android:maxLines="4" android:ellipsize="end" android:layout_marginTop="6dp" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+            <Button android:id="@+id/routePoiButton" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Route here" />
+            <Button android:id="@+id/preferredFuelButton" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Prefer fuel" android:visibility="gone" />
+            <Button android:id="@+id/openOsmButton" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Open OSM" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="bottom|start" android:layout_margin="5dp" android:background="#B30A0E11" android:padding="4dp" android:text="© OpenStreetMap contributors • OpenFreeMap" android:textColor="#E5EBEE" android:textSize="9sp" />
+</FrameLayout>
