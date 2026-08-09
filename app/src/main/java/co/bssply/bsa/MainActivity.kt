@@ -101,6 +101,10 @@ class MainActivity : AppCompatActivity(), LocationListener {
         applySavedPrefs()
         installButtonIcons()
         installListeners()
+        mapView.setOnTouchListener { _, event ->
+            if (event.action == android.view.MotionEvent.ACTION_DOWN) closePanels()
+            false
+        }
         logger.event("app", "startup", mapOf("version" to BuildConfig.VERSION_NAME))
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.topBar)) { v, insets ->
@@ -161,6 +165,13 @@ class MainActivity : AppCompatActivity(), LocationListener {
         findViewById<Button>(R.id.clearRouteButton).setOnClickListener { clearRoute() }
         findViewById<Button>(R.id.markIssueButton).setOnClickListener { markIssue() }
         findViewById<Button>(R.id.diagnosticsButton).setOnClickListener { showDiagnostics() }
+        findViewById<Button>(R.id.refreshPoisButton).setOnClickListener { refreshAtMapCenter(true) }
+        findViewById<Button>(R.id.clearPoiCacheButton).setOnClickListener {
+            PoiCache.clear(this)
+            lastLoadedCenter = null
+            Toast.makeText(this, "POI cache cleared", Toast.LENGTH_SHORT).show()
+            logger.event("poi_cache", "cache cleared")
+        }
         findViewById<Button>(R.id.aboutButton).setOnClickListener { showAbout() }
         findViewById<Button>(R.id.privacyButton).setOnClickListener { showPrivacy() }
 
@@ -174,7 +185,16 @@ class MainActivity : AppCompatActivity(), LocationListener {
         locationMarkerGroup.setOnCheckedChangeListener { _,id-> val v=when(id){R.id.locationDotRadio->"dot";R.id.locationCarRadio->"car";else->"arrow"};prefs.edit().putString("location_marker",v).apply();updateLocationMarker() }
     }
 
-    private fun toggle(panel:LinearLayout){ val show=panel.visibility!=View.VISIBLE;filterPanel.visibility=View.GONE;settingsPanel.visibility=View.GONE;if(show)panel.visibility=View.VISIBLE }
+    private fun closePanels() {
+        filterPanel.visibility = View.GONE
+        settingsPanel.visibility = View.GONE
+    }
+
+    private fun toggle(panel: LinearLayout) {
+        val show = panel.visibility != View.VISIBLE
+        closePanels()
+        if (show) panel.visibility = View.VISIBLE
+    }
 
     private fun applyMapStyle(first:Boolean=false){
         val m=map?:return
@@ -184,13 +204,48 @@ class MainActivity : AppCompatActivity(), LocationListener {
 
     private fun scheduleAutoLoad(){ handler.removeCallbacksAndMessages(null); handler.postDelayed({ refreshAtMapCenter(false) },700) }
 
-    private fun refreshAtMapCenter(force:Boolean){
-        val c=map?.cameraPosition?.target?:return
-        val old=lastLoadedCenter
-        if(!force&&old!=null&&distanceBetween(old.latitude,old.longitude,c.latitude,c.longitude)<1200f)return
-        status("Loading OSM POIs…")
-        val start=System.currentTimeMillis()
-        io.execute { runCatching{OverpassClient.fetch(c.latitude,c.longitude,4000)}.onSuccess{pois->runOnUiThread{allPois=pois;AppState.pois=pois;lastLoadedCenter=c;renderMarkers();status("${pois.size} POIs • ${pois.count{it.kind==OsmPoi.Kind.SURVEILLANCE}} surveillance • ${pois.count{it.kind==OsmPoi.Kind.FUEL}} fuel");logger.event("overpass","loaded",mapOf("count" to pois.size,"ms" to System.currentTimeMillis()-start))}}.onFailure{e->runOnUiThread{status("OSM failed: ${e.message}");logger.event("error","overpass failed",mapOf("message" to e.message))}} }
+    private fun refreshAtMapCenter(force: Boolean) {
+        val c = map?.cameraPosition?.target ?: return
+        val old = lastLoadedCenter
+        if (!force && old != null && distanceBetween(old.latitude, old.longitude, c.latitude, c.longitude) < 1200f) return
+
+        status(if (force) "Refreshing OSM POIs…" else "Loading nearby POIs…")
+        val start = System.currentTimeMillis()
+        io.execute {
+            runCatching { PoiCache.fetch(this, c.latitude, c.longitude, 4000, force) }
+                .onSuccess { result ->
+                    runOnUiThread {
+                        val pois = result.pois
+                        allPois = pois
+                        AppState.pois = pois
+                        lastLoadedCenter = c
+                        renderMarkers()
+                        val source = when (result.source) {
+                            PoiCache.Source.CACHE -> "cache"
+                            PoiCache.Source.NETWORK -> "OSM"
+                            PoiCache.Source.STALE_CACHE -> "stale cache"
+                        }
+                        status("${pois.size} POIs • ${pois.count { it.kind == OsmPoi.Kind.SURVEILLANCE }} surveillance • ${pois.count { it.kind == OsmPoi.Kind.FUEL }} fuel • $source")
+                        val logFields = linkedMapOf<String, Any?>(
+                            "count" to pois.size,
+                            "source" to result.source.name.lowercase(Locale.US),
+                            "age_ms" to result.ageMs,
+                            "ms" to System.currentTimeMillis() - start
+                        )
+                        if (prefs.getBoolean("log_precise", false)) {
+                            logFields["query_lat"] = result.queryLat
+                            logFields["query_lon"] = result.queryLon
+                        }
+                        logger.event("poi_cache", "POIs loaded", logFields)
+                    }
+                }
+                .onFailure { e ->
+                    runOnUiThread {
+                        status("OSM failed: ${e.message}")
+                        logger.event("error", "POI load failed", mapOf("message" to e.message))
+                    }
+                }
+        }
     }
 
     private fun searchDestination(){
@@ -274,9 +329,11 @@ class MainActivity : AppCompatActivity(), LocationListener {
             val ageSeconds = ((System.currentTimeMillis() - ts).coerceAtLeast(0L) / 1000L)
             "${ageSeconds}s ago"
         } ?: "never"
+        val cacheStats = PoiCache.stats(this)
         val msg = "BSA ${BuildConfig.VERSION_NAME}\n\n" +
             "GPS: ${lastLocation?.let { "±${it.accuracy.toInt()} m • ${if (it.hasBearing()) "${it.bearing.toInt()}°" else "no bearing"}" } ?: "no fix"}\n" +
             "POIs loaded: ${allPois.size}\n" +
+            "POI cache: ${cacheStats.files} regions • ${cacheStats.bytes / 1024} KB\n" +
             "Android Auto: ${if (VehicleState.androidAutoConnected) "connected" else "not connected"}\n" +
             "Fuel API: ${VehicleState.fuelCapability}\n" +
             "EnergyLevel callback: $lastVehicleUpdate\n" +

@@ -34,7 +34,14 @@ object LucideIconFactory {
             Glyph.FUEL -> { rect(4f,2f,14f,22f,1f); rect(6f,5f,12f,9f,0.5f); line(14f,7f,18f,10f); line(18f,10f,18f,18f); c.drawArc(RectF(x(16f),y(16f),x(20f),y(20f)),0f,180f,false,p) }
             Glyph.ROUTE -> { circle(6f,19f,2f); circle(18f,5f,2f); c.drawPath(Path().apply{moveTo(x(8f),y(19f));cubicTo(x(16f),y(19f),x(8f),y(5f),x(16f),y(5f))},p) }
             Glyph.EDIT -> { line(4f,20f,9f,19f); line(9f,19f,20f,8f); line(16f,4f,20f,8f); line(4f,20f,5f,15f); line(5f,15f,16f,4f) }
-            Glyph.SETTINGS -> { circle(12f,12f,3f); circle(12f,12f,8f); line(12f,2f,12f,4f);line(12f,20f,12f,22f);line(2f,12f,4f,12f);line(20f,12f,22f,12f) }
+            Glyph.SETTINGS -> {
+                circle(12f,12f,3f)
+                circle(12f,12f,7f)
+                line(12f,2f,12f,5f); line(12f,19f,12f,22f)
+                line(2f,12f,5f,12f); line(19f,12f,22f,12f)
+                line(4.9f,4.9f,7f,7f); line(17f,17f,19.1f,19.1f)
+                line(19.1f,4.9f,17f,7f); line(7f,17f,4.9f,19.1f)
+            }
             Glyph.SEARCH -> { circle(10f,10f,6f); line(14.5f,14.5f,21f,21f) }
             Glyph.CAMERA -> { rect(3f,7f,21f,19f,2f); circle(12f,13f,3f); line(7f,7f,9f,4f); line(9f,4f,15f,4f); line(15f,4f,17f,7f) }
             Glyph.UTENSILS -> { line(7f,3f,7f,21f); line(4f,3f,4f,8f); line(10f,3f,10f,8f); c.drawPath(Path().apply{moveTo(x(4f),y(8f));cubicTo(x(4f),y(12f),x(10f),y(12f),x(10f),y(8f))},p); line(17f,3f,17f,21f); c.drawArc(RectF(x(14f),y(3f),x(20f),y(13f)),90f,180f,false,p) }

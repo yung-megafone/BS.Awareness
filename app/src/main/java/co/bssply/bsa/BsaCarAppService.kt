@@ -1,6 +1,8 @@
 package co.bssply.bsa
 
 import android.content.Intent
+import android.text.SpannableString
+import android.text.Spanned
 import androidx.car.app.CarAppService
 import androidx.car.app.CarContext
 import androidx.car.app.Screen
@@ -12,9 +14,16 @@ import androidx.car.app.hardware.common.OnCarDataAvailableListener
 import androidx.car.app.hardware.info.CarInfo
 import androidx.car.app.hardware.info.EnergyLevel
 import androidx.car.app.model.Action
-import androidx.car.app.model.Header
+import androidx.car.app.model.ActionStrip
+import androidx.car.app.model.CarColor
+import androidx.car.app.model.CarLocation
+import androidx.car.app.model.Distance
+import androidx.car.app.model.DistanceSpan
 import androidx.car.app.model.ItemList
-import androidx.car.app.model.ListTemplate
+import androidx.car.app.model.Metadata
+import androidx.car.app.model.Place
+import androidx.car.app.model.PlaceListMapTemplate
+import androidx.car.app.model.PlaceMarker
 import androidx.car.app.model.Row
 import androidx.car.app.model.Template
 import androidx.car.app.validation.HostValidator
@@ -32,6 +41,7 @@ class BsaCarSession : Session() {
 
 class BsaCarHomeScreen(carContext: CarContext) : Screen(carContext) {
     private val logger = BsaLogger(carContext)
+    private val prefs = carContext.getSharedPreferences("bsa_prefs", android.content.Context.MODE_PRIVATE)
     private var carInfo: CarInfo? = null
     private var energyListener: OnCarDataAvailableListener<EnergyLevel>? = null
 
@@ -100,8 +110,6 @@ class BsaCarHomeScreen(carContext: CarContext) : Screen(carContext) {
                     "low_fuel_value_available" to (low != null)
                 )
 
-                // Actual vehicle values are intentionally omitted from logs by default.
-                // They are included only when the user explicitly enables that setting.
                 val prefs = carContext.getSharedPreferences("bsa_prefs", android.content.Context.MODE_PRIVATE)
                 if (prefs.getBoolean("log_vehicle_values", false)) {
                     fields["fuel_percent"] = fuel
@@ -165,108 +173,141 @@ class BsaCarHomeScreen(carContext: CarContext) : Screen(carContext) {
     }
 
     override fun onGetTemplate(): Template {
-        val list = ItemList.Builder()
-        val route = AppState.route
-        if (route != null) {
-            list.addItem(
-                Row.Builder()
-                    .setTitle("Navigating")
-                    .addText(route.destinationLabel)
-                    .addText(
-                        "${String.format("%.1f mi", route.distanceMeters / 1609.344)} • " +
-                            "${(route.durationSeconds / 60).toInt()} min"
-                    )
-                    .build()
-            )
-        }
-
         val loc = AppState.location
+        val list = ItemList.Builder()
+
         val pois = if (loc == null) {
-            AppState.pois.take(5)
+            emptyList()
         } else {
             AppState.pois
-                .filter { it.kind == OsmPoi.Kind.SURVEILLANCE || it.kind == OsmPoi.Kind.FUEL }
-                .sortedBy { p ->
-                    val out = FloatArray(1)
-                    android.location.Location.distanceBetween(
-                        loc.latitude,
-                        loc.longitude,
-                        p.lat,
-                        p.lon,
-                        out
-                    )
-                    out[0]
-                }
-                .take(5)
+                .asSequence()
+                .filter(::isPoiEnabled)
+                .sortedBy { poi -> distanceMeters(loc.latitude, loc.longitude, poi.lat, poi.lon) }
+                .take(6)
+                .toList()
         }
 
-        pois.forEach { p ->
-            val out = FloatArray(1)
-            if (loc != null) {
-                android.location.Location.distanceBetween(
-                    loc.latitude,
-                    loc.longitude,
-                    p.lat,
-                    p.lon,
-                    out
-                )
-            }
-            val distance = if (loc == null) {
-                "nearby"
-            } else if (out[0] < 305) {
-                "${out[0].toInt()} m"
-            } else {
-                String.format("%.1f mi", out[0] / 1609.344)
-            }
+        pois.forEach { poi ->
+            val meters = distanceMeters(loc!!.latitude, loc.longitude, poi.lat, poi.lon)
+            val place = Place.Builder(CarLocation.create(poi.lat, poi.lon))
+                .setMarker(markerFor(poi))
+                .build()
 
             list.addItem(
                 Row.Builder()
-                    .setTitle(
-                        if (p.kind == OsmPoi.Kind.SURVEILLANCE) {
-                            "Camera • ${p.operator ?: p.name}"
-                        } else {
-                            "Fuel • ${p.name}"
-                        }
-                    )
-                    .addText(distance)
+                    .setTitle(poiTitle(poi))
+                    .addText(distanceText(meters, poi.humanSummary()))
+                    .setMetadata(Metadata.Builder().setPlace(place).build())
+                    .setOnClickListener {
+                        logger.event(
+                            "car_poi",
+                            "POI selected",
+                            mapOf("osm_type" to poi.osmType, "osm_id" to poi.osmId, "kind" to poi.kind.name)
+                        )
+                    }
                     .build()
             )
         }
 
-        val fuelText = when {
-            VehicleState.fuelPercent != null -> {
-                "Fuel ${VehicleState.fuelPercent!!.toInt()}%" +
-                    (VehicleState.remainingRangeMeters?.let {
-                        " • ${String.format("%.0f mi", it / 1609.344)} range"
-                    } ?: "")
-            }
-            else -> "Fuel data ${VehicleState.fuelCapability}"
-        }
-        list.addItem(Row.Builder().setTitle("Vehicle").addText(fuelText).build())
+        val template = PlaceListMapTemplate.Builder()
+            .setTitle("BSA • Awareness")
+            .setHeaderAction(Action.APP_ICON)
+            .setCurrentLocationEnabled(true)
+            .setActionStrip(speedStrip())
 
-        val sp = carContext.getSharedPreferences("bsa_prefs", android.content.Context.MODE_PRIVATE)
-        val preferred = sp.getString("preferred_fuel_name", null)
-        if (
-            sp.getBoolean("fuel_assist", true) &&
-            preferred != null &&
-            (VehicleState.fuelPercent ?: 101f) <= 50f
-        ) {
-            list.addItem(
-                Row.Builder()
-                    .setTitle("Fuel Assist")
-                    .addText("Preferred stop: $preferred • fuel is at or below 50%")
+        // PlaceListMapTemplate requires content when it is not in a loading state.
+        // Always provide an ItemList, even when the phone filters leave zero visible POIs.
+        // An empty list is valid and keeps the map/HUD open instead of dropping back to the launcher.
+        template.setItemList(list.build())
+
+        if (loc != null) {
+            template.setAnchor(Place.Builder(CarLocation.create(loc.latitude, loc.longitude)).build())
+        }
+
+        if (carContext.carAppApiLevel >= 5) {
+            template.setOnContentRefreshListener {
+                logger.event("car", "Android Auto POI refresh requested")
+                invalidate()
+            }
+        }
+
+        return template.build()
+    }
+
+    private fun isPoiEnabled(poi: OsmPoi): Boolean = when (poi.kind) {
+        OsmPoi.Kind.SURVEILLANCE -> prefs.getBoolean("layer_surveillance", true)
+        OsmPoi.Kind.FOOD -> prefs.getBoolean("layer_food", false)
+        OsmPoi.Kind.FUEL -> prefs.getBoolean("layer_fuel", true)
+        OsmPoi.Kind.SHOPPING -> prefs.getBoolean("layer_shopping", false)
+        OsmPoi.Kind.SERVICES -> prefs.getBoolean("layer_services", false)
+        OsmPoi.Kind.LODGING -> prefs.getBoolean("layer_lodging", false)
+        OsmPoi.Kind.OTHER -> prefs.getBoolean("layer_other", false)
+    }
+
+    private fun speedStrip(): ActionStrip {
+        val location = AppState.location
+        val speedMph = if (location?.hasSpeed() == true) {
+            (location.speed * 2.2369363f).coerceAtLeast(0f).toInt()
+        } else {
+            null
+        }
+        val speedLimit = AppState.speedLimitMph
+
+        return ActionStrip.Builder()
+            .addAction(
+                Action.Builder()
+                    .setTitle(speedMph?.let { "$it mph" } ?: "-- mph")
+                    .setOnClickListener { }
                     .build()
             )
-        }
-
-        return ListTemplate.Builder()
-            .setSingleList(list.build())
-            .setHeader(
-                Header.Builder()
-                    .setStartHeaderAction(Action.APP_ICON)
-                    .setTitle("BSA • Awareness")
+            .addAction(
+                Action.Builder()
+                    .setTitle(speedLimit?.let { "Limit $it" } ?: "Limit --")
+                    .setOnClickListener { }
                     .build()
             )
             .build()
+    }
+
+    private fun markerFor(poi: OsmPoi): PlaceMarker {
+        val (label, color) = when (poi.kind) {
+            OsmPoi.Kind.SURVEILLANCE -> "C" to CarColor.RED
+            OsmPoi.Kind.FUEL -> "G" to CarColor.GREEN
+            OsmPoi.Kind.FOOD -> "F" to CarColor.YELLOW
+            OsmPoi.Kind.SHOPPING -> "S" to CarColor.BLUE
+            OsmPoi.Kind.SERVICES -> "SV" to CarColor.BLUE
+            OsmPoi.Kind.LODGING -> "L" to CarColor.BLUE
+            OsmPoi.Kind.OTHER -> "P" to CarColor.BLUE
+        }
+        return PlaceMarker.Builder().setLabel(label).setColor(color).build()
+    }
+
+    private fun poiTitle(poi: OsmPoi): String = when (poi.kind) {
+        OsmPoi.Kind.SURVEILLANCE -> "Camera • ${poi.operator ?: poi.name}"
+        OsmPoi.Kind.FUEL -> "Fuel • ${poi.name}"
+        else -> "${poi.categoryLabel()} • ${poi.name}"
+    }
+
+    private fun distanceMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Float {
+        val out = FloatArray(1)
+        android.location.Location.distanceBetween(lat1, lon1, lat2, lon2, out)
+        return out[0]
+    }
+
+    private fun distanceText(meters: Float, detail: String): CharSequence {
+        val distance = if (meters < 160.9344f) {
+            Distance.create((meters / 0.3048).toDouble(), Distance.UNIT_FEET)
+        } else {
+            Distance.create((meters / 1609.344).toDouble(), Distance.UNIT_MILES_P1)
+        }
+        val safeDetail = detail.ifBlank { "Mapped point of interest" }
+        val text = SpannableString("  • $safeDetail")
+        text.setSpan(
+            DistanceSpan.create(distance),
+            0,
+            1,
+            Spanned.SPAN_INCLUSIVE_INCLUSIVE
+        )
+        return text
     }
 }

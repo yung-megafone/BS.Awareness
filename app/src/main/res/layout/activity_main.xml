@@ -14,7 +14,7 @@
         <TextView android:id="@+id/statusText" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BSA 0.4" android:textColor="#B7C5CD" android:textSize="11sp" android:maxLines="2" />
     </LinearLayout>
 
-    <LinearLayout android:layout_width="52dp" android:layout_height="wrap_content" android:layout_gravity="end|center_vertical" android:layout_marginEnd="8dp" android:orientation="vertical" android:background="#B30A0E11" android:padding="3dp">
+    <LinearLayout android:layout_width="52dp" android:layout_height="wrap_content" android:layout_gravity="end|center_vertical" android:layout_marginEnd="8dp" android:orientation="vertical">
         <ImageButton android:id="@+id/locateButton" style="@style/BsaMapButton" android:contentDescription="Locate/follow" />
         <ImageButton android:id="@+id/filterButton" style="@style/BsaMapButton" android:contentDescription="Layers" />
         <ImageButton android:id="@+id/gasButton" style="@style/BsaMapButton" android:contentDescription="Next gas" />
@@ -53,6 +53,8 @@
         <Button android:id="@+id/routeWorkButton" style="@style/BsaSmallButton" android:text="Route Work" />
         <Button android:id="@+id/saveWorkButton" style="@style/BsaSmallButton" android:text="Save map center as Work" />
         <CheckBox android:id="@+id/fuelAssistCheck" style="@style/BsaCheck" android:text="Fuel Assist when vehicle data exists" />
+        <Button android:id="@+id/refreshPoisButton" style="@style/BsaSmallButton" android:text="Refresh POIs now" />
+        <Button android:id="@+id/clearPoiCacheButton" style="@style/BsaSmallButton" android:text="Clear POI cache" />
         <Button android:id="@+id/markIssueButton" style="@style/BsaSmallButton" android:text="Mark issue / field note" />
         <Button android:id="@+id/diagnosticsButton" style="@style/BsaSmallButton" android:text="Diagnostics &amp; export" />
         <Button android:id="@+id/aboutButton" style="@style/BsaSmallButton" android:text="About" />

@@ -13,8 +13,8 @@ android {
         applicationId = "co.bssply.bsa"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "0.4.0-alpha"
+        versionCode = 5
+        versionName = "0.4.2-alpha"
     }
 
     buildTypes {

@@ -9,7 +9,10 @@ object OverpassClient {
     private const val ENDPOINT = "https://overpass-api.de/api/interpreter"
     private const val USER_AGENT = "BSAwareness/0.4 (OSM field-awareness proof of concept)"
 
-    fun fetch(lat: Double, lon: Double, radiusMeters: Int = 4000): List<OsmPoi> {
+    fun fetch(lat: Double, lon: Double, radiusMeters: Int = 4000): List<OsmPoi> =
+        parse(fetchRaw(lat, lon, radiusMeters))
+
+    fun fetchRaw(lat: Double, lon: Double, radiusMeters: Int = 4000): String {
         val query = """
             [out:json][timeout:25];
             (
@@ -38,8 +41,11 @@ object OverpassClient {
         val text = stream.bufferedReader().use { it.readText() }
         conn.disconnect()
         if (code !in 200..299) error("Overpass HTTP $code: ${text.take(180)}")
+        return text
+    }
 
-        val root = JSONObject(text)
+    fun parse(raw: String): List<OsmPoi> {
+        val root = JSONObject(raw)
         val elements = root.getJSONArray("elements")
         val result = ArrayList<OsmPoi>(elements.length())
 
