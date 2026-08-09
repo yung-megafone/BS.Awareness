@@ -39,7 +39,7 @@ BSA is currently an **experimental alpha project under active development**.
 
 ## Project Status
 
-**Current release: `v0.4.1-alpha`**
+**Current release: `v0.4.2-alpha`**
 
 BSA began as a proof-of-concept for displaying OpenStreetMap surveillance nodes on an Android device.
 
