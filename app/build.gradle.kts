@@ -1,8 +1,15 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+}
+
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 }
 
 android {
@@ -15,11 +22,51 @@ android {
         targetSdk = 36
         versionCode = 5
         versionName = "0.4.2-alpha"
+        manifestPlaceholders["carAppCategory"] = "androidx.car.app.category.POI"
+        buildConfigField("String", "CAR_APP_MODE", "\"poi\"")
+    }
+
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
+    flavorDimensions += "carMode"
+    productFlavors {
+        create("poi") {
+            dimension = "carMode"
+            // Distinct ID allows all four A/B variants to coexist on one phone.
+            applicationIdSuffix = ".poi"
+            versionNameSuffix = "-poi"
+            manifestPlaceholders["carAppCategory"] = "androidx.car.app.category.POI"
+            buildConfigField("String", "CAR_APP_MODE", "\"poi\"")
+        }
+        create("nav") {
+            dimension = "carMode"
+            applicationIdSuffix = ".nav"
+            versionNameSuffix = "-nav"
+            manifestPlaceholders["carAppCategory"] = "androidx.car.app.category.NAVIGATION"
+            buildConfigField("String", "CAR_APP_MODE", "\"navigation\"")
+        }
     }
 
     buildTypes {
+        debug {
+            // Keep debug and locally release-signed builds installed simultaneously.
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
         release {
             isMinifyEnabled = false
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

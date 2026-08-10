@@ -7,3 +7,9 @@ captures/
 .externalNativeBuild/
 .cxx/
 .gradle-dist/
+
+# Local release signing material -- NEVER COMMIT
+*.jks
+*.keystore
+keystore.properties
+signing/

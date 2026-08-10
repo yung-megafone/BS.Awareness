@@ -1,13 +1,19 @@
 package co.bssply.bsa
 
 import android.content.Intent
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.text.SpannableString
 import android.text.Spanned
+import androidx.car.app.AppManager
 import androidx.car.app.CarAppService
 import androidx.car.app.CarContext
 import androidx.car.app.Screen
 import androidx.car.app.Session
 import androidx.car.app.SessionInfo
+import androidx.car.app.SurfaceCallback
+import androidx.car.app.SurfaceContainer
 import androidx.car.app.hardware.CarHardwareManager
 import androidx.car.app.hardware.common.CarValue
 import androidx.car.app.hardware.common.OnCarDataAvailableListener
@@ -20,12 +26,14 @@ import androidx.car.app.model.CarLocation
 import androidx.car.app.model.Distance
 import androidx.car.app.model.DistanceSpan
 import androidx.car.app.model.ItemList
+import androidx.car.app.model.ListTemplate
 import androidx.car.app.model.Metadata
 import androidx.car.app.model.Place
 import androidx.car.app.model.PlaceListMapTemplate
 import androidx.car.app.model.PlaceMarker
 import androidx.car.app.model.Row
 import androidx.car.app.model.Template
+import androidx.car.app.navigation.model.MapWithContentTemplate
 import androidx.car.app.validation.HostValidator
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -44,14 +52,26 @@ class BsaCarHomeScreen(carContext: CarContext) : Screen(carContext) {
     private val prefs = carContext.getSharedPreferences("bsa_prefs", android.content.Context.MODE_PRIVATE)
     private var carInfo: CarInfo? = null
     private var energyListener: OnCarDataAvailableListener<EnergyLevel>? = null
+    private val navMode = BuildConfig.CAR_APP_MODE == "navigation"
+    private var navSurfaceRenderer: BsaNavSurfaceRenderer? = null
 
     init {
         VehicleState.androidAutoConnected = true
         logger.event(
             "car",
             "Android Auto connected",
-            mapOf("car_app_api_level" to carContext.carAppApiLevel)
+            mapOf(
+                "car_app_api_level" to carContext.carAppApiLevel,
+                "car_app_mode" to BuildConfig.CAR_APP_MODE
+            )
         )
+
+        if (navMode) {
+            navSurfaceRenderer = BsaNavSurfaceRenderer(carContext)
+            carContext.getCarService(AppManager::class.java)
+                .setSurfaceCallback(navSurfaceRenderer)
+            logger.event("car", "Navigation test surface callback registered")
+        }
 
         lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
@@ -174,18 +194,30 @@ class BsaCarHomeScreen(carContext: CarContext) : Screen(carContext) {
 
     override fun onGetTemplate(): Template {
         val loc = AppState.location
-        val list = ItemList.Builder()
+        val pois = visiblePois(loc)
 
-        val pois = if (loc == null) {
-            emptyList()
+        return if (navMode) {
+            buildNavigationTemplate(loc, pois)
         } else {
-            AppState.pois
-                .asSequence()
-                .filter(::isPoiEnabled)
-                .sortedBy { poi -> distanceMeters(loc.latitude, loc.longitude, poi.lat, poi.lon) }
-                .take(6)
-                .toList()
+            buildPoiTemplate(loc, pois)
         }
+    }
+
+    private fun visiblePois(loc: android.location.Location?): List<OsmPoi> {
+        if (loc == null) return emptyList()
+        return AppState.pois
+            .asSequence()
+            .filter(::isPoiEnabled)
+            .sortedBy { poi -> distanceMeters(loc.latitude, loc.longitude, poi.lat, poi.lon) }
+            .take(6)
+            .toList()
+    }
+
+    private fun buildPoiTemplate(
+        loc: android.location.Location?,
+        pois: List<OsmPoi>
+    ): Template {
+        val list = ItemList.Builder()
 
         pois.forEach { poi ->
             val meters = distanceMeters(loc!!.latitude, loc.longitude, poi.lat, poi.lon)
@@ -216,8 +248,6 @@ class BsaCarHomeScreen(carContext: CarContext) : Screen(carContext) {
             .setActionStrip(speedStrip())
 
         // PlaceListMapTemplate requires content when it is not in a loading state.
-        // Always provide an ItemList, even when the phone filters leave zero visible POIs.
-        // An empty list is valid and keeps the map/HUD open instead of dropping back to the launcher.
         template.setItemList(list.build())
 
         if (loc != null) {
@@ -232,6 +262,56 @@ class BsaCarHomeScreen(carContext: CarContext) : Screen(carContext) {
         }
 
         return template.build()
+    }
+
+    private fun buildNavigationTemplate(
+        loc: android.location.Location?,
+        pois: List<OsmPoi>
+    ): Template {
+        val list = ItemList.Builder()
+
+        if (pois.isEmpty()) {
+            list.addItem(
+                Row.Builder()
+                    .setTitle("BSA NAV test")
+                    .addText("No enabled nearby POIs in the current cache")
+                    .build()
+            )
+        } else {
+            pois.forEach { poi ->
+                val meters = distanceMeters(loc!!.latitude, loc.longitude, poi.lat, poi.lon)
+                list.addItem(
+                    Row.Builder()
+                        .setTitle(poiTitle(poi))
+                        .addText(distanceText(meters, poi.humanSummary()))
+                        .setOnClickListener {
+                            logger.event(
+                                "car_poi",
+                                "NAV test POI selected",
+                                mapOf("osm_type" to poi.osmType, "osm_id" to poi.osmId, "kind" to poi.kind.name)
+                            )
+                        }
+                        .build()
+                )
+            }
+        }
+
+        val content = ListTemplate.Builder()
+            .setSingleList(list.build())
+            .setTitle("BSA • NAVIGATION test")
+            .setHeaderAction(Action.APP_ICON)
+            .build()
+
+        // MapWithContentTemplate requires Car App API 7+. The current DHU negotiated
+        // API 8, but keep a generic list fallback for older hosts.
+        if (carContext.carAppApiLevel < 7) {
+            return content
+        }
+
+        return MapWithContentTemplate.Builder()
+            .setContentTemplate(content)
+            .setActionStrip(speedStrip())
+            .build()
     }
 
     private fun isPoiEnabled(poi: OsmPoi): Boolean = when (poi.kind) {
@@ -311,3 +391,72 @@ class BsaCarHomeScreen(carContext: CarContext) : Screen(carContext) {
         return text
     }
 }
+
+/**
+ * Minimal app-rendered surface used only by the NAVIGATION test flavor.
+ *
+ * This deliberately does not attempt to duplicate the phone MapLibre map yet. Its purpose is
+ * to exercise the same custom-surface path used by Android Auto navigation applications while
+ * preserving the nearby-POI content panel. Once the NAV flavor is proven on a real head unit,
+ * this surface can be replaced by the actual BSA map renderer.
+ */
+private class BsaNavSurfaceRenderer(
+    private val carContext: CarContext
+) : SurfaceCallback {
+    override fun onSurfaceAvailable(surfaceContainer: SurfaceContainer) {
+        draw(surfaceContainer)
+    }
+
+    override fun onSurfaceDestroyed(surfaceContainer: SurfaceContainer) {
+        try {
+            surfaceContainer.surface?.release()
+        } catch (_: Throwable) {
+        }
+    }
+
+    override fun onVisibleAreaChanged(visibleArea: android.graphics.Rect) {
+        // The next surface draw uses the full host-provided surface.
+    }
+
+    override fun onStableAreaChanged(stableArea: android.graphics.Rect) {
+        // Kept intentionally minimal for this discovery/A-B test build.
+    }
+
+    private fun draw(surfaceContainer: SurfaceContainer) {
+        val surface = surfaceContainer.surface ?: return
+        var canvas: Canvas? = null
+        try {
+            canvas = surface.lockCanvas(null)
+            canvas.drawColor(Color.rgb(18, 24, 31))
+
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.rgb(225, 232, 240)
+                textSize = 30f
+            }
+            canvas.drawText("BSA NAV TEST", 28f, 48f, paint)
+
+            paint.color = Color.rgb(125, 145, 160)
+            paint.strokeWidth = 4f
+            val midY = canvas.height * 0.58f
+            canvas.drawLine(0f, midY, canvas.width.toFloat(), midY - 45f, paint)
+            canvas.drawLine(canvas.width * 0.18f, canvas.height.toFloat(), canvas.width * 0.55f, 0f, paint)
+
+            paint.color = Color.rgb(80, 170, 255)
+            canvas.drawCircle(canvas.width * 0.48f, canvas.height * 0.54f, 12f, paint)
+
+            paint.color = Color.rgb(190, 200, 210)
+            paint.textSize = 18f
+            canvas.drawText("Navigation-category / app-rendered surface", 28f, canvas.height - 28f, paint)
+        } catch (_: Throwable) {
+            // A surface draw failure must never take down the car app during this experiment.
+        } finally {
+            if (canvas != null) {
+                try {
+                    surface.unlockCanvasAndPost(canvas)
+                } catch (_: Throwable) {
+                }
+            }
+        }
+    }
+}
+
