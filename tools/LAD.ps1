@@ -52,6 +52,13 @@ function UI-Status([string]$Message, [int]$Percent = -1) {
     UI-DoEvents
 }
 
+function Set-MainButtonText([string]$Text) {
+    if ($btnFull) {
+        $btnFull.Text = $Text
+        UI-DoEvents
+    }
+}
+
 function Set-Busy([bool]$Value) {
     $script:Busy = $Value
     $btnFull.Enabled = -not $Value
@@ -437,7 +444,7 @@ function Build-Matrix {
     if (-not (Signing-Configured)) {
         $answer = [System.Windows.Forms.MessageBox]::Show(
             "Release signing is not configured. Run the local signing setup now?",
-            "BSA Lazy Dev Wizard",
+            "BSA LAD",
             [System.Windows.Forms.MessageBoxButtons]::YesNo,
             [System.Windows.Forms.MessageBoxIcon]::Question
         )
@@ -630,6 +637,9 @@ function Refresh-Environment {
 function Run-Action([scriptblock]$Action) {
     if ($script:Busy) { return }
     Set-Busy $true
+    Set-MainButtonText "PLEASE DON'T FUCKING BREAK"
+
+    $succeeded = $false
 
     try {
         if (-not $script:RepoRoot) {
@@ -641,21 +651,36 @@ function Run-Action([scriptblock]$Action) {
 
         $logDir = Join-Path $script:RepoRoot "build-logs"
         New-Item -ItemType Directory -Force -Path $logDir | Out-Null
-        $script:LogPath = Join-Path $logDir ("wizard-" + (Get-Date -Format "yyyyMMdd-HHmmss") + ".log")
+        $script:LogPath = Join-Path $logDir ("lad-" + (Get-Date -Format "yyyyMMdd-HHmmss") + ".log")
 
         & $Action
+        $succeeded = $true
+        Set-MainButtonText "HOLY SHIT IT WORKED"
     } catch {
         UI-Log $_.Exception.Message "ERROR"
         UI-Status "Failed — see log.", 0
+        Set-MainButtonText "PLEASE DON'T BREAK (AGAIN)"
+
         [void][System.Windows.Forms.MessageBox]::Show(
             $_.Exception.Message + "`r`n`r`nLog:`r`n" + $script:LogPath,
-            "BSA Lazy Dev Wizard — Failed",
+            "BSA LAD — Failed",
             [System.Windows.Forms.MessageBoxButtons]::OK,
             [System.Windows.Forms.MessageBoxIcon]::Error
         )
     } finally {
         Set-Busy $false
         Refresh-Environment
+
+        if ($succeeded) {
+            $resetTimer = New-Object System.Windows.Forms.Timer
+            $resetTimer.Interval = 2500
+            $resetTimer.Add_Tick({
+                $resetTimer.Stop()
+                $resetTimer.Dispose()
+                Set-MainButtonText "JUST DO IT"
+            })
+            $resetTimer.Start()
+        }
     }
 }
 
@@ -664,7 +689,7 @@ function Run-Action([scriptblock]$Action) {
 # -----------------------------
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "BSA Lazy Dev Wizard"
+$form.Text = "BSA LAD — Lazy Ass Developer"
 $form.Size = New-Object System.Drawing.Size(860, 650)
 $form.StartPosition = "CenterScreen"
 $form.MinimumSize = New-Object System.Drawing.Size(760, 560)
@@ -673,14 +698,14 @@ $form.ForeColor = [System.Drawing.Color]::Gainsboro
 $form.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 
 $title = New-Object System.Windows.Forms.Label
-$title.Text = "BSA Lazy Dev Wizard"
+$title.Text = "BSA LAD"
 $title.Font = New-Object System.Drawing.Font("Segoe UI Semibold", 20)
 $title.AutoSize = $true
 $title.Location = New-Object System.Drawing.Point(20, 16)
 $form.Controls.Add($title)
 
 $subtitle = New-Object System.Windows.Forms.Label
-$subtitle.Text = "Build • Install • Android Auto • DHU"
+$subtitle.Text = "Lazy Ass Developer • Build • Install • Android Auto • DHU"
 $subtitle.ForeColor = [System.Drawing.Color]::Silver
 $subtitle.AutoSize = $true
 $subtitle.Location = New-Object System.Drawing.Point(23, 55)
@@ -752,7 +777,7 @@ function New-Button([string]$Text, [int]$Width = 145) {
     return $b
 }
 
-$btnFull = New-Button "Run Full Lazy Dev" 170
+$btnFull = New-Button "Run Full LAD Run" 170
 $btnBuild = New-Button "Build Matrix"
 $btnInstall = New-Button "Install Existing"
 $btnDhu = New-Button "Launch DHU"
@@ -785,7 +810,7 @@ $txtLog.Font = New-Object System.Drawing.Font("Consolas", 9)
 $form.Controls.Add($txtLog)
 
 $footer = New-Object System.Windows.Forms.Label
-$footer.Text = "Full Lazy Dev = Java → phone → build 4 variants → install → AA server → DHU"
+$footer.Text = "LAD: overcomplicate the tooling so you can undercomplicate the work."
 $footer.AutoSize = $true
 $footer.ForeColor = [System.Drawing.Color]::Gray
 $footer.Location = New-Object System.Drawing.Point(20, 590)
@@ -840,7 +865,7 @@ $btnFull.Add_Click({
 
 $form.Add_Shown({
     Refresh-Environment
-    UI-Log "Lazy Dev Wizard ready."
+    UI-Log "LAD ready. Do the shit."
 })
 
 [void]$form.ShowDialog()
