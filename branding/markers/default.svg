@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="320" viewBox="0 0 256 320">
+  <!-- POI pin -->
+  <path d="M128 12
+           C64 12 20 58 20 118
+           C20 198 128 304 128 304
+           C128 304 236 198 236 118
+           C236 58 192 12 128 12 Z"
+        fill="#495057" stroke="#F2F7FB" stroke-width="10"/>
+
+  <!-- BSA badge -->
+  <circle cx="128" cy="116" r="67" fill="#081F33"/>
+
+  <!-- Navigation arrow -->
+  <path d="M128 61
+           L105 112
+           L128 98
+           L151 112 Z"
+        fill="#FFFFFF"/>
+
+  <!-- Awareness horizon -->
+  <path d="M82 137
+           Q128 106 174 137
+           Q128 118 82 137 Z"
+        fill="#3FCB70"/>
+
+  <!-- Road / centerline -->
+  <rect x="124" y="145" width="8" height="13" rx="1" fill="#FFFFFF"/>
+  <path d="M123 164 H133 L135 180 H121 Z" fill="#FFFFFF"/>
+
+  <title>Default POI</title>
+</svg>

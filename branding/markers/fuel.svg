@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="320" viewBox="0 0 256 320">
+      <path d="M128 12 C64 12 20 58 20 118 C20 198 128 304 128 304 C128 304 236 198 236 118 C236 58 192 12 128 12 Z"
+            fill="#7958C7" stroke="#F2F7FB" stroke-width="10"/>
+      <circle cx="128" cy="116" r="67" fill="#081F33"/>
+      
+<path d="M91 75 H145 Q154 75 154 84 V164 H91 Z" fill="#FFFFFF"/>
+<rect x="101" y="88" width="42" height="31" rx="4" fill="#7958C7"/>
+<path d="M154 98 Q178 105 178 126 V150 Q178 163 166 163 H155" fill="none" stroke="#FFFFFF" stroke-width="12"/>
+
+      <title>Fuel POI</title>
+    </svg>

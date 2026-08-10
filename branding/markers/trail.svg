@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="320" viewBox="0 0 256 320">
+      <path d="M128 12 C64 12 20 58 20 118 C20 198 128 304 128 304 C128 304 236 198 236 118 C236 58 192 12 128 12 Z"
+            fill="#2E8E57" stroke="#F2F7FB" stroke-width="10"/>
+      <circle cx="128" cy="116" r="67" fill="#081F33"/>
+      
+<path d="M74 151 L110 101 L133 129 L155 96 L187 151 Z" fill="#FFFFFF"/>
+<path d="M88 151 L113 119 L129 138 L155 110 L177 151 Z" fill="#2E8E57"/>
+
+      <title>Trail POI</title>
+    </svg>

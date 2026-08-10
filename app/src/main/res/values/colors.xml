@@ -3,4 +3,8 @@
     <color name="black">#111111</color>
     <color name="white">#FFFFFF</color>
     <color name="panel">#E61B1B1B</color>
+    <color name="bsa_deep_navy">#081F33</color>
+    <color name="bsa_awareness_green">#2E8E57</color>
+    <color name="bsa_bright_green">#3FCB70</color>
+    <color name="bsa_blue">#0A8FE8</color>
 </resources>

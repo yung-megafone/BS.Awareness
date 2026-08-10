@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="650" height="760" viewBox="0 0 650 760">
+      <g transform="translate(-187,-120) scale(.62)">
+        <g>
+    <path d="M 512.0 287.56 L 433.26 461.16 L 512.0 411.56 L 590.74 461.16 Z"
+          fill="#FFFFFF"/>
+    <path d="M 346.46000000000004 572.76
+             Q 512.0 461.16 677.54 572.76
+             Q 512.0 504.56 346.46000000000004 572.76 Z"
+          fill="#3FCB70"/>
+        <path d="M 512.0 591.36 L 495.88 764.96 L 528.12 764.96 Z"
+              fill="#081F33" opacity="0.16"/>
+        <rect x="502.08" y="597.56" width="19.84" height="34.72" rx="2.48" fill="#FFFFFF"/>
+        <rect x="498.36" y="655.84" width="27.28" height="43.4" rx="2.48" fill="#FFFFFF"/>
+        <path d="M 490.92 729.0 L 533.08 729.0 L 540.52 786.04 L 483.48 786.04 Z"
+              fill="#FFFFFF"/></g>
+      </g>
+      <text x="325" y="655" text-anchor="middle" fill="#F2F7FB" font-size="115" font-weight="700"
+            font-family="Segoe UI, Arial, sans-serif" letter-spacing="8">BSA</text>
+    </svg>

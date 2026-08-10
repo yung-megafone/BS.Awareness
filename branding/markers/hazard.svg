@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="320" viewBox="0 0 256 320">
+      <path d="M128 12 C64 12 20 58 20 118 C20 198 128 304 128 304 C128 304 236 198 236 118 C236 58 192 12 128 12 Z"
+            fill="#F1A72C" stroke="#F2F7FB" stroke-width="10"/>
+      <circle cx="128" cy="116" r="67" fill="#081F33"/>
+      
+<path d="M128 70 L183 164 L73 164 Z" fill="#F1A72C"/>
+<rect x="122" y="99" width="12" height="38" rx="5" fill="#081F33"/>
+<circle cx="128" cy="149" r="7" fill="#081F33"/>
+
+      <title>Hazard POI</title>
+    </svg>

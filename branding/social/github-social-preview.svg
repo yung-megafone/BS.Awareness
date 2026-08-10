@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#081F33"/>
+    <stop offset="1" stop-color="#0C3554"/>
+  </linearGradient>
+</defs>
+<rect width="1280" height="640" rx="36" fill="url(#bg)"/>
+<path d="M0 492 L180 355 L315 470 L465 315 L625 470 L790 330 L965 470 L1280 350 L1280 640 L0 640Z" fill="#0A2942"/>
+<path d="M0 540 L185 450 L315 520 L455 430 L615 550 L775 445 L955 525 L1280 440 L1280 640 L0 640Z" fill="#061B2C"/>
+<g transform="translate(-40,-148) scale(.70)">
+<g>
+    <path d="M 512.0 287.56 L 433.26 461.16 L 512.0 411.56 L 590.74 461.16 Z"
+          fill="#FFFFFF"/>
+    <path d="M 346.46000000000004 572.76
+             Q 512.0 461.16 677.54 572.76
+             Q 512.0 504.56 346.46000000000004 572.76 Z"
+          fill="#3FCB70"/>
+        <path d="M 512.0 591.36 L 495.88 764.96 L 528.12 764.96 Z"
+              fill="#081F33" opacity="0.16"/>
+        <rect x="502.08" y="597.56" width="19.84" height="34.72" rx="2.48" fill="#FFFFFF"/>
+        <rect x="498.36" y="655.84" width="27.28" height="43.4" rx="2.48" fill="#FFFFFF"/>
+        <path d="M 490.92 729.0 L 533.08 729.0 L 540.52 786.04 L 483.48 786.04 Z"
+              fill="#FFFFFF"/></g>
+</g>
+<text x="620" y="280" fill="#F2F7FB" font-family="Segoe UI, Arial, sans-serif" font-size="125" font-weight="700" letter-spacing="8">BSA</text>
+<path d="M885 200 L920 272 L850 272 Z" fill="#3FCB70"/>
+<text x="625" y="360" fill="#F2F7FB" font-family="Segoe UI, Arial, sans-serif" font-size="38" letter-spacing="9">MAPPING &amp; AWARENESS</text>
+<text x="625" y="430" fill="#3FCB70" font-family="Segoe UI, Arial, sans-serif" font-size="32" letter-spacing="3">Know what's around you.</text>
+</svg>

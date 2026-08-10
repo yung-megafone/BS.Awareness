@@ -12,7 +12,7 @@
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <service android:name=".BsaCarAppService" android:exported="true">
+        <service android:name=".BsaCarAppService" android:exported="true" android:icon="@drawable/bsa_android_auto_icon">
             <intent-filter><action android:name="androidx.car.app.CarAppService" /><category android:name="${carAppCategory}" /></intent-filter>
         </service>
         <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.files" android:exported="false" android:grantUriPermissions="true">

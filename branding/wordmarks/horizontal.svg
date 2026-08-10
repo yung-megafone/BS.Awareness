@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="420" viewBox="0 0 1600 420">
+    <g transform="translate(-35,-305) scale(.72)">
+      <g>
+    <path d="M 512.0 352.72 L 456.12 475.92 L 512.0 440.72 L 567.88 475.92 Z"
+          fill="#FFFFFF"/>
+    <path d="M 394.52 555.12
+             Q 512.0 475.92 629.48 555.12
+             Q 512.0 506.72 394.52 555.12 Z"
+          fill="#3FCB70"/>
+        <path d="M 512.0 568.32 L 500.56 691.52 L 523.44 691.52 Z"
+              fill="#081F33" opacity="0.16"/>
+        <rect x="504.96" y="572.72" width="14.08" height="24.64" rx="1.76" fill="#FFFFFF"/>
+        <rect x="502.32" y="614.08" width="19.36" height="30.8" rx="1.76" fill="#FFFFFF"/>
+        <path d="M 497.04 666.0 L 526.96 666.0 L 532.24 706.48 L 491.76 706.48 Z"
+              fill="#FFFFFF"/></g>
+    </g>
+    <text x="420" y="210" fill="#F2F7FB" font-size="190" font-weight="700"
+          font-family="Segoe UI, Arial, sans-serif" letter-spacing="12">BSA</text>
+    <text x="425" y="292" fill="#F2F7FB" font-size="39"
+          font-family="Segoe UI, Arial, sans-serif" letter-spacing="13">NAV • AWARE • EXPLORE</text>
+    <path d="M 710 118 L 756 204 L 664 204 Z" fill="#3FCB70"/>
+    </svg>
