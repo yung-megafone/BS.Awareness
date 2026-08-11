@@ -1,3 +1,87 @@
+# B.S. Awareness
+
+> [!IMPORTANT]
+> **PROJECT CANCELLED — August 11, 2026**
+>
+> B.S. Awareness is no longer under development.
+
+B.S. Awareness (BSA) was an experimental, privacy-conscious driving-awareness application built around OpenStreetMap, MapLibre, routing, environmental POIs, surveillance/ALPR awareness, and Android Auto.
+
+The project was created primarily to put this information on the **vehicle display**. The standalone Android mapping client was useful as the foundation for that goal, but it was not the reason for developing another mapping application.
+
+## Why development stopped
+
+BSA reached a functional Android Auto proof-of-concept. The project could build Android for Cars variants, run in Google's Desktop Head Unit, expose its `CarAppService`, and exercise POI/navigation-class Android Auto integration. Real-vehicle testing then exposed a platform restriction that conflicts with a core project requirement.
+
+Android Auto's developer option for allowing unknown-source applications does **not** apply to applications built with the Android for Cars App Library. Consequently, a locally built/sideloaded Car App Library application cannot simply be enabled for ordinary use on a physical Android Auto head unit through the same unknown-sources development workflow available to some other Android Auto application categories.
+
+BSA was deliberately intended to remain an open-source, locally installable project without requiring Google Play distribution or a Google developer account merely to run the software on the developer's own vehicle. Requiring that distribution relationship defeats that design goal.
+
+Without the vehicle-display component, BSA becomes primarily another Android/OpenStreetMap mapping application. There are already mature projects serving that role, and duplicating them was not the objective of BSA.
+
+**Development is therefore cancelled indefinitely.**
+
+This repository is retained only as source history and a proof of concept. No further releases, compatibility work, bug fixes, support, or roadmap items should be expected. Anyone is free to study, fork, or continue the code subject to the repository's license.
+
+## State at cancellation
+
+At the time development stopped, BSA contained or had experimental groundwork for:
+
+- MapLibre/OpenStreetMap vector mapping
+- Local-first POI caching and stale-cache refresh behavior
+- Fuel, food, business, parking, lodging, service, and miscellaneous POIs
+- Surveillance-camera and ALPR awareness
+- Direction/bearing-aware surveillance visualization
+- Experimental estimated surveillance coverage
+- Device location and heading display
+- Destination search
+- Experimental A→B routing and rerouting
+- Saved-destination groundwork
+- Next Gas / Fuel Assist experimentation
+- Local diagnostics and field notes
+- Android Auto POI and navigation application variants
+- Android Auto vehicle-capability probing
+- Debug/release signing and four-variant Android Auto test builds
+- LAD (Lazy Ass Developer), a Windows development helper for building, signing, installing, and launching Android Auto/DHU test workflows
+
+The Android Auto code should be regarded as experimental development code, not a supported vehicle application.
+
+## Android Auto result
+
+Four test variants were used to separate application category and build/signing variables:
+
+```text
+POI Debug
+POI Release
+NAV Debug
+NAV Release
+```
+
+All four could be built and installed through ADB. Android Auto development through the Desktop Head Unit was functional. During physical-head-unit testing, the applications were not normally enumerated in the Android Auto launcher. A NAV Debug instance that had been used during DHU testing was observed binding to Android Auto, demonstrating that the Car App service itself could be recognized, but this did not make the application launcher-eligible.
+
+The project was stopped after confirming the documented unknown-source limitation for Android for Cars App Library applications. No attempt will be made to circumvent Android Auto's trusted-source restrictions.
+
+## Privacy philosophy
+
+BSA was designed around local ownership of the application and its data. It did not require a BSA account, advertising system, analytics backend, telemetry backend, or cloud profile. Some online mapping, geocoding, POI, and routing functionality necessarily involved third-party services, and the project documentation intentionally distinguished those requests from data collected by BSA itself.
+
+See [`PRIVACY.md`](PRIVACY.md) for the project's privacy documentation as it existed at cancellation.
+
+## Building the archived source
+
+The repository remains buildable source code rather than a maintained product. Development used Android Studio, the Android SDK, the included Gradle wrapper, and a suitable JDK. Build requirements may stop working as dependencies and Android tooling evolve.
+
+No compatibility updates are planned.
+
+## License
+
+The source remains available under [`LICENSE`](LICENSE). Third-party components and geographic data retain their respective licenses and attribution requirements; see [`LICENSE-NOTES.md`](LICENSE-NOTES.md).
+
+---
+
+<details>
+<summary><strong>Original alpha README / project documentation</strong></summary>
+
 <p align="center">
   <img src="branding/bsa-wordmark.svg" alt="B.S. Awareness" width="520">
 </p>
@@ -893,3 +977,6 @@ OpenStreetMap data is © OpenStreetMap contributors and is subject to the applic
 <p align="center">
   Open-source mapping • Navigation • Environmental awareness
 </p>
+
+
+</details>
